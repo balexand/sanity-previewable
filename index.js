@@ -14,7 +14,7 @@ const applyRequestDefaults = (request) => {
   };
 };
 
-export const prefetchForDetailPages = async (client, request) => {
+const prefetchForDetailPages = async (client, request) => {
   request = applyRequestDefaults(request);
 
   return (await sanityFetch(client, request)).map((doc) => {
@@ -33,7 +33,7 @@ export const prefetchForDetailPages = async (client, request) => {
   });
 };
 
-export const prefetchForListPage = async (client, request) => {
+const prefetchForListPage = async (client, request) => {
   request = applyRequestDefaults(request);
 
   return {
@@ -46,3 +46,5 @@ export const prefetchForListPage = async (client, request) => {
     },
   };
 };
+
+module.exports = { prefetchForDetailPages, prefetchForListPage };
