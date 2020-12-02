@@ -9,7 +9,7 @@ const isPublished = ({ _id }) => {
   return !_id.startsWith("drafts.");
 };
 
-const sanityFetch = (client, { params, projection, query }) => {
+const prefetchPublished = (client, { params, projection, query }) => {
   return client
     .fetch([query, projection].join("|"), params)
     .then((results) => results.filter(isPublished));
@@ -26,7 +26,7 @@ const applyRequestDefaults = (request) => {
 const prefetchForDetailPages = (client, request) => {
   request = applyRequestDefaults(request);
 
-  return sanityFetch(client, request).then((results) =>
+  return prefetchPublished(client, request).then((results) =>
     results.map((doc) => ({
       params: {
         ...request.params,
@@ -45,7 +45,7 @@ const prefetchForDetailPages = (client, request) => {
 const prefetchForListPage = (client, request) => {
   request = applyRequestDefaults(request);
 
-  return sanityFetch(client, request).then((prefetchedResults) => ({
+  return prefetchPublished(client, request).then((prefetchedResults) => ({
     params: request.params,
     prefetchedResults,
     query: [request.query, request.projection].join("|"),
