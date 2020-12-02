@@ -45,7 +45,66 @@ describe("overlayDrafts", () => {
   });
 });
 
+const config = () => ({
+  dataset: "myset",
+  projectId: "projectx",
+});
+
 describe("prefetchForDetailPages", () => {
+  test("with projection and params", async () => {
+    const client = { config, fetch: jest.fn() };
+    client.fetch.mockResolvedValue([{ _id: "abc" }]);
+
+    const result = await prefetchForDetailPages(client, {
+      params: { type: "product" },
+      projection: `{ _id, title }`,
+      query: `*[_type == $type]`,
+    });
+
+    expect(client.fetch.mock.calls).toEqual([
+      ["*[_type == $type]|{ _id, title }", { type: "product" }],
+    ]);
+
+    expect(result).toEqual([
+      {
+        params: { type: "product", __ids: ["abc", "drafts.abc"] },
+        prefetchedResults: [{ _id: "abc" }],
+        query: "*[_id in $__ids]|{ _id, title }",
+        sanityConfig: {
+          dataset: "myset",
+          projectId: "projectx",
+        },
+      },
+    ]);
+  });
+
+  test("with defaults", async () => {
+    const client = { config, fetch: jest.fn() };
+    client.fetch.mockResolvedValue([{ _id: "abc" }]);
+
+    const result = await prefetchForDetailPages(client, {
+      query: `*[_type == "product"]`,
+    });
+
+    expect(client.fetch.mock.calls).toEqual([
+      ['*[_type == "product"]|{ ... }', {}],
+    ]);
+
+    expect(result).toEqual([
+      {
+        params: {
+          __ids: ["abc", "drafts.abc"],
+        },
+        prefetchedResults: [{ _id: "abc" }],
+        query: "*[_id in $__ids]|{ ... }",
+        sanityConfig: {
+          dataset: "myset",
+          projectId: "projectx",
+        },
+      },
+    ]);
+  });
+
   test("throws exception if query is missing", () => {
     expect(() => {
       prefetchForDetailPages(null, {});
