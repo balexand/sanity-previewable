@@ -27,6 +27,7 @@ const applyRequestDefaults = (request) => {
   };
 };
 
+// TODO doc comment
 const prefetchForDetailPages = (client, request) => {
   request = applyRequestDefaults(request);
 
@@ -46,6 +47,7 @@ const prefetchForDetailPages = (client, request) => {
   );
 };
 
+// TODO doc comment; mention consistent ordering
 const prefetchForListPage = (client, request) => {
   request = applyRequestDefaults(request);
 
@@ -84,6 +86,7 @@ const overlayDrafts = (docs) => {
   return results;
 };
 
+// TODO doc comment
 const startLivePreview = (previewClient, { params, query }, setResults) => {
   const refreshResults = throttle(() => {
     previewClient.fetch(query, params).then((newResults) => {
