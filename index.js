@@ -1,9 +1,11 @@
+const { partition, throttle } = require("lodash");
+
 const isPublished = ({ _id: _id }) => !_id.startsWith("drafts.");
 
-const sanityFetch = async (client, { params, projection, query }) => {
-  return (await client.fetch([query, projection].join("|"), params)).filter(
-    isPublished
-  );
+const sanityFetch = (client, { params, projection, query }) => {
+  return client
+    .fetch([query, projection].join("|"), params)
+    .then((results) => results.filter(isPublished));
 };
 
 const applyRequestDefaults = (request) => {
@@ -14,11 +16,11 @@ const applyRequestDefaults = (request) => {
   };
 };
 
-const prefetchForDetailPages = async (client, request) => {
+const prefetchForDetailPages = (client, request) => {
   request = applyRequestDefaults(request);
 
-  return (await sanityFetch(client, request)).map((doc) => {
-    return {
+  return sanityFetch(client, request).then((results) =>
+    results.map((doc) => ({
       params: {
         ...request.params,
         __ids: [doc._id, `drafts.${doc._id}`],
@@ -29,22 +31,70 @@ const prefetchForDetailPages = async (client, request) => {
         dataset: client.config().dataset,
         projectId: client.config().projectId,
       },
-    };
-  });
+    }))
+  );
 };
 
-const prefetchForListPage = async (client, request) => {
+const prefetchForListPage = (client, request) => {
   request = applyRequestDefaults(request);
 
-  return {
+  return sanityFetch(client, request).then((prefetchedResults) => ({
     params: request.params,
-    prefetchedResults: await sanityFetch(client, request),
+    prefetchedResults,
     query: [request.query, request.projection].join("|"),
     sanityConfig: {
       dataset: client.config().dataset,
       projectId: client.config().projectId,
     },
-  };
+  }));
 };
 
-module.exports = { prefetchForDetailPages, prefetchForListPage };
+// TODO test coverage
+const overlayDrafts = (docs) => {
+  const [drafts, originals] = partition(docs, (doc) =>
+    doc._id.startsWith("drafts.")
+  );
+
+  return drafts.reduce((originals, draft) => {
+    draft = { ...draft, _id: draft._id.replace("drafts.", "") };
+
+    if (originals.some((original) => original._id === draft._id)) {
+      return originals.map((original) =>
+        original._id === draft._id ? draft : original
+      );
+    } else {
+      // TODO this will mess up the sort order of drafts
+      return originals.concat([draft]);
+    }
+  }, originals);
+};
+
+const startLivePreview = (previewClient, { params, query }, setResults) => {
+  const refreshResults = throttle(() => {
+    previewClient.fetch(query, params).then((newResults) => {
+      setResults(overlayDrafts(newResults));
+    });
+  }, 2500);
+
+  refreshResults();
+
+  return previewClient
+    .listen(query, params, {
+      includePreviousRevision: false,
+      includeResult: false,
+      visibility: "query",
+    })
+    .subscribe(() => {
+      refreshResults();
+      // https://www.sanity.io/docs/listening documents that even with visibility: 'query', the
+      // listener may be notified before new results are availabe to a query. Add a second refresh
+      // that will catch any delayed results.
+      setTimeout(refreshResults, 4000);
+    });
+};
+
+module.exports = {
+  prefetchForDetailPages,
+  prefetchForListPage,
+  startLivePreview,
+};
