@@ -87,16 +87,16 @@ const overlayDrafts = (docs) => {
 };
 
 // TODO doc comment
-const startLivePreview = (previewClient, { params, query }, setResults) => {
+const startLivePreview = (client, { params, query }, setResults) => {
   const refreshResults = throttle(() => {
-    previewClient.fetch(query, params).then((newResults) => {
+    client.fetch(query, params).then((newResults) => {
       setResults(overlayDrafts(newResults));
     });
   }, 2500);
 
   refreshResults();
 
-  return previewClient
+  return client
     .listen(query, params, {
       includePreviousRevision: false,
       includeResult: false,
