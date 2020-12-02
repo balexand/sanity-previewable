@@ -4,6 +4,7 @@
   "description": "TODO",
   "main": "index.js",
   "scripts": {
+    "lint": "eslint .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -15,5 +16,11 @@
   "bugs": {
     "url": "https://github.com/balexand/sanity-previewable/issues"
   },
-  "homepage": "https://github.com/balexand/sanity-previewable#readme"
+  "homepage": "https://github.com/balexand/sanity-previewable#readme",
+  "devDependencies": {
+    "eslint": "^7.14.0",
+    "eslint-config-prettier": "^6.15.0",
+    "eslint-plugin-prettier": "^3.1.4",
+    "prettier": "^2.2.1"
+  }
 }
