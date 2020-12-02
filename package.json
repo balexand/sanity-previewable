@@ -1,0 +1,19 @@
+{
+  "name": "sanity-previewable",
+  "version": "0.1.0",
+  "description": "TODO",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/balexand/sanity-previewable.git"
+  },
+  "author": "Brian Alexander (https://github.com/balexand)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/balexand/sanity-previewable/issues"
+  },
+  "homepage": "https://github.com/balexand/sanity-previewable#readme"
+}
