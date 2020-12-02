@@ -16,6 +16,10 @@ const prefetchPublished = (client, { params, projection, query }) => {
 };
 
 const applyRequestDefaults = (request) => {
+  if (typeof request.query !== "string") {
+    throw new Error("request must contain `query` key");
+  }
+
   return {
     ...request,
     params: request.params || {},

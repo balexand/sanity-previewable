@@ -1,6 +1,10 @@
 /* eslint-env jest */
 
-const { overlayDrafts } = require("./index");
+const {
+  overlayDrafts,
+  prefetchForDetailPages,
+  prefetchForListPage,
+} = require("./index");
 
 describe("overlayDrafts", () => {
   test("draft replaces document with same ID", () => {
@@ -38,5 +42,21 @@ describe("overlayDrafts", () => {
         "documents must contain _id key; please ensure that your GROQ query selects this key"
       )
     );
+  });
+});
+
+describe("prefetchForDetailPages", () => {
+  test("throws exception if query is missing", () => {
+    expect(() => {
+      prefetchForDetailPages(null, {});
+    }).toThrow(new Error("request must contain `query` key"));
+  });
+});
+
+describe("prefetchForListPage", () => {
+  test("throws exception if query is missing", () => {
+    expect(() => {
+      prefetchForListPage(null, {});
+    }).toThrow(new Error("request must contain `query` key"));
   });
 });
