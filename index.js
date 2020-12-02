@@ -1,6 +1,13 @@
-const { partition, throttle } = require("lodash");
+const { throttle } = require("lodash");
 
-const isPublished = ({ _id: _id }) => !_id.startsWith("drafts.");
+const isPublished = ({ _id }) => {
+  if (typeof _id !== "string") {
+    throw new Error(
+      "documents must contain _id key; please ensure that your GROQ query selects this key"
+    );
+  }
+  return !_id.startsWith("drafts.");
+};
 
 const sanityFetch = (client, { params, projection, query }) => {
   return client
@@ -49,24 +56,28 @@ const prefetchForListPage = (client, request) => {
   }));
 };
 
-// TODO test coverage
 const overlayDrafts = (docs) => {
-  const [drafts, originals] = partition(docs, (doc) =>
-    doc._id.startsWith("drafts.")
-  );
+  const results = [];
 
-  return drafts.reduce((originals, draft) => {
-    draft = { ...draft, _id: draft._id.replace("drafts.", "") };
-
-    if (originals.some((original) => original._id === draft._id)) {
-      return originals.map((original) =>
-        original._id === draft._id ? draft : original
-      );
+  docs.forEach((doc) => {
+    if (isPublished(doc)) {
+      results.push(doc);
     } else {
-      // TODO this will mess up the sort order of drafts
-      return originals.concat([draft]);
+      doc = { ...doc, _id: doc._id.replace("drafts.", "") };
+
+      const replacementIndex = results.findIndex(
+        (existing) => existing._id === doc._id
+      );
+
+      if (replacementIndex >= 0) {
+        results[replacementIndex] = doc;
+      } else {
+        results.push(doc);
+      }
     }
-  }, originals);
+  });
+
+  return results;
 };
 
 const startLivePreview = (previewClient, { params, query }, setResults) => {
@@ -94,6 +105,7 @@ const startLivePreview = (previewClient, { params, query }, setResults) => {
 };
 
 module.exports = {
+  overlayDrafts,
   prefetchForDetailPages,
   prefetchForListPage,
   startLivePreview,
