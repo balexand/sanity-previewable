@@ -56,7 +56,9 @@ describe("prefetchForDetailPages", () => {
     client.fetch.mockResolvedValue([{ _id: "abc" }]);
 
     const result = await prefetchForDetailPages(client, {
-      params: { type: "product" },
+      params: {
+        type: "product",
+      },
       projection: `{ _id, title }`,
       query: `*[_type == $type]`,
     });
@@ -67,7 +69,10 @@ describe("prefetchForDetailPages", () => {
 
     expect(result).toEqual([
       {
-        params: { type: "product", __ids: ["abc", "drafts.abc"] },
+        params: {
+          type: "product",
+          __ids: ["abc", "drafts.abc"],
+        },
         prefetchedResults: [{ _id: "abc" }],
         query: "*[_id in $__ids]|{ _id, title }",
         sanityConfig: {
@@ -113,6 +118,56 @@ describe("prefetchForDetailPages", () => {
 });
 
 describe("prefetchForListPage", () => {
+  test("with projection and params", async () => {
+    const client = { config, fetch: jest.fn() };
+    client.fetch.mockResolvedValue([{ _id: "abc" }]);
+
+    const result = await prefetchForListPage(client, {
+      params: {
+        type: "product",
+      },
+      projection: `{ _id, title }`,
+      query: `*[_type == $type] | order(title)`,
+    });
+
+    expect(client.fetch.mock.calls).toEqual([
+      ["*[_type == $type] | order(title)|{ _id, title }", { type: "product" }],
+    ]);
+
+    expect(result).toEqual({
+      params: {
+        type: "product",
+      },
+      prefetchedResults: [{ _id: "abc" }],
+      query: "*[_type == $type] | order(title)|{ _id, title }",
+      sanityConfig: {
+        dataset: "myset",
+        projectId: "projectx",
+      },
+    });
+  });
+
+  test("with defaults", async () => {
+    const client = { config, fetch: jest.fn() };
+    client.fetch.mockResolvedValue([{ _id: "abc" }]);
+
+    const result = await prefetchForListPage(client, {
+      query: `* | order(_id)`,
+    });
+
+    expect(client.fetch.mock.calls).toEqual([["* | order(_id)|{ ... }", {}]]);
+
+    expect(result).toEqual({
+      params: {},
+      prefetchedResults: [{ _id: "abc" }],
+      query: "* | order(_id)|{ ... }",
+      sanityConfig: {
+        dataset: "myset",
+        projectId: "projectx",
+      },
+    });
+  });
+
   test("throws exception if query is missing", () => {
     expect(() => {
       prefetchForListPage(null, {});
