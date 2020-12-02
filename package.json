@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/balexand/sanity-previewable/issues"
   },
-  "homepage": "https://github.com/balexand/sanity-previewable#readme"
+  "homepage": "https://github.com/balexand/sanity-previewable#readme",
+  "devDependencies": {
+    "eslint": "^7.14.0"
+  }
 }
