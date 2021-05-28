@@ -20,6 +20,19 @@ describe("overlayDrafts", () => {
     ]);
   });
 
+  test("draft replaces document with same ID even if it comes before other item", () => {
+    const results = overlayDrafts([
+      { _id: "drafts.abc", title: "Draft" },
+      { _id: "abc", title: "Original" },
+      { _id: "def", title: "Other" },
+    ]);
+
+    expect(results).toEqual([
+      { _id: "abc", title: "Draft" },
+      { _id: "def", title: "Other" },
+    ]);
+  });
+
   test("new draft inserted at the correct position in array", () => {
     const results = overlayDrafts([
       { _id: "abc", title: "existing 1" },
@@ -31,6 +44,20 @@ describe("overlayDrafts", () => {
       { _id: "abc", title: "existing 1" },
       { _id: "def", title: "new doc" },
       { _id: "ghi", title: "existing 2" },
+    ]);
+  });
+
+  test("multiple drafts", () => {
+    const results = overlayDrafts([
+      { _id: "abc", title: "Original" },
+      { _id: "def", title: "Other" },
+      { _id: "drafts.abc", title: "Draft" },
+      { _id: "drafts.abc", title: "Draft 2" },
+    ]);
+
+    expect(results).toEqual([
+      { _id: "abc", title: "Draft 2" },
+      { _id: "def", title: "Other" },
     ]);
   });
 
