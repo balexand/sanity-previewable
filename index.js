@@ -9,6 +9,8 @@ const isPublished = ({ _id }) => {
   return !_id.startsWith("drafts.");
 };
 
+const isDraft = (doc) => !isPublished(doc);
+
 const publishedId = (id) => id.replace("drafts.", "");
 
 const prefetchPublished = (client, { params, projection, query }) => {
@@ -68,7 +70,7 @@ const overlayDrafts = (docs) => {
   const [replacements, results] = partition(
     docs,
     (doc) =>
-      !isPublished(doc) &&
+      isDraft(doc) &&
       docs.find((original) => original._id === publishedId(doc._id))
   ).map((list) => list.map((doc) => ({ ...doc, _id: publishedId(doc._id) })));
 
