@@ -47,6 +47,20 @@ describe("overlayDrafts", () => {
     ]);
   });
 
+  test("multiple drafts", () => {
+    const results = overlayDrafts([
+      { _id: "abc", title: "Original" },
+      { _id: "def", title: "Other" },
+      { _id: "drafts.abc", title: "Draft" },
+      { _id: "drafts.abc", title: "Draft 2" },
+    ]);
+
+    expect(results).toEqual([
+      { _id: "abc", title: "Draft 2" },
+      { _id: "def", title: "Other" },
+    ]);
+  });
+
   test("throws exception if _id is missing", () => {
     expect(() => {
       overlayDrafts([{}]);

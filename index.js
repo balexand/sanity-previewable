@@ -1,4 +1,4 @@
-const { throttle } = require("lodash");
+const { partition, throttle } = require("lodash");
 
 const isPublished = ({ _id }) => {
   if (typeof _id !== "string") {
@@ -8,6 +8,8 @@ const isPublished = ({ _id }) => {
   }
   return !_id.startsWith("drafts.");
 };
+
+const publishedId = (id) => id.replace("drafts.", "");
 
 const prefetchPublished = (client, { params, projection, query }) => {
   return client
@@ -63,24 +65,15 @@ const prefetchForListPage = (client, request) => {
 };
 
 const overlayDrafts = (docs) => {
-  const results = [];
+  const [replacements, results] = partition(
+    docs,
+    (doc) =>
+      !isPublished(doc) &&
+      docs.find((original) => original._id === publishedId(doc._id))
+  ).map((list) => list.map((doc) => ({ ...doc, _id: publishedId(doc._id) })));
 
-  docs.forEach((doc) => {
-    if (isPublished(doc)) {
-      results.push(doc);
-    } else {
-      doc = { ...doc, _id: doc._id.replace("drafts.", "") };
-
-      const replacementIndex = results.findIndex(
-        (existing) => existing._id === doc._id
-      );
-
-      if (replacementIndex >= 0) {
-        results[replacementIndex] = doc;
-      } else {
-        results.push(doc);
-      }
-    }
+  replacements.forEach((doc) => {
+    results[results.findIndex((original) => original._id === doc._id)] = doc;
   });
 
   return results;
