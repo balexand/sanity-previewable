@@ -20,6 +20,19 @@ describe("overlayDrafts", () => {
     ]);
   });
 
+  test("draft replaces document with same ID even if it comes before other item", () => {
+    const results = overlayDrafts([
+      { _id: "drafts.abc", title: "Draft" },
+      { _id: "abc", title: "Original" },
+      { _id: "def", title: "Other" },
+    ]);
+
+    expect(results).toEqual([
+      { _id: "abc", title: "Draft" },
+      { _id: "def", title: "Other" },
+    ]);
+  });
+
   test("new draft inserted at the correct position in array", () => {
     const results = overlayDrafts([
       { _id: "abc", title: "existing 1" },
