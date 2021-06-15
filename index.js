@@ -1,4 +1,4 @@
-const { partition, throttle } = require("lodash");
+const { partition } = require("lodash");
 
 const isPublished = ({ _id }) => {
   if (typeof _id !== "string") {
