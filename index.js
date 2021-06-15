@@ -1,4 +1,4 @@
-const { partition, throttle } = require("lodash");
+const { partition } = require("lodash");
 
 const isPublished = ({ _id }) => {
   if (typeof _id !== "string") {
@@ -82,33 +82,12 @@ const overlayDrafts = (docs) => {
 };
 
 // TODO doc comment
-const startLivePreview = (client, { params, query }, setResults) => {
-  const refreshResults = throttle(() => {
-    client.fetch(query, params).then((newResults) => {
-      setResults(overlayDrafts(newResults));
-    });
-  }, 2500);
-
-  refreshResults();
-
-  return client
-    .listen(query, params, {
-      includePreviousRevision: false,
-      includeResult: false,
-      visibility: "query",
-    })
-    .subscribe(() => {
-      refreshResults();
-      // https://www.sanity.io/docs/listening documents that even with visibility: 'query', the
-      // listener may be notified before new results are availabe to a query. Add a second refresh
-      // that will catch any delayed results.
-      setTimeout(refreshResults, 4000);
-    });
-};
+const fetchPreview = (client, { params, query }) =>
+  client.fetch(query, params).then((newResults) => overlayDrafts(newResults));
 
 module.exports = {
+  fetchPreview,
   overlayDrafts,
   prefetchForDetailPages,
   prefetchForListPage,
-  startLivePreview,
 };
